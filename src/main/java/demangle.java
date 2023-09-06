@@ -42,20 +42,12 @@ class demangle implements Callable<Integer>
         final StringBuilder mangled = new StringBuilder();
         final StringBuilder unknown = new StringBuilder();
         MangledSymbol symbol;
-        int num;
-        String prefix;
-        List<String> parameters = new ArrayList<>();
 
         String demangle(String input)
         {
             for (int i = 0; i < input.length(); i++)
             {
                 final char c = input.charAt(i);
-//                if ('_' == c || 'Z' == c || 'N' == c)
-//                {
-//                    mangled.append(c);
-//                    continue;
-//                }
 
                 if (Character.isDigit(c))
                 {
@@ -65,18 +57,12 @@ class demangle implements Callable<Integer>
                         unknown.setLength(0);
                     }
 
-                    if (symbol.isEmpty())
-                    {
-                        num = 10 * num + (c - '0');
-                        continue;
-
-                    }
+                    symbol.addDigit(c - '0');
+                    continue;
                 }
 
-                if (num > 0)
+                if (symbol != null && symbol.addChar(c))
                 {
-                    symbol.append(c);
-                    num--;
                     continue;
                 }
 
@@ -87,7 +73,7 @@ class demangle implements Callable<Integer>
             {
                 output.append(mangled);
             }
-            else if (symbol != null && !symbol.isEmpty())
+            else if (symbol != null && symbol.isComplete())
             {
                 output.append(symbol.demangle());
             }
@@ -102,9 +88,11 @@ class demangle implements Callable<Integer>
 
     private sealed interface MangledSymbol permits MangledName
     {
-        boolean isEmpty();
+        boolean isComplete();
 
-        void append(char c);
+        boolean addChar(char c);
+
+        void addDigit(int digit);
 
         String demangle();
     }
@@ -112,17 +100,37 @@ class demangle implements Callable<Integer>
     private static final class MangledName implements MangledSymbol
     {
         final StringBuilder name = new StringBuilder();
+        int length;
 
         @Override
-        public boolean isEmpty()
+        public boolean isComplete()
         {
-            return name.isEmpty();
+            return name.length() == length;
         }
 
         @Override
-        public void append(char c)
+        public boolean addChar(char c)
         {
-            name.append(c);
+            if (length > 0)
+            {
+                name.append(c);
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public void addDigit(int i)
+        {
+            if (name.isEmpty())
+            {
+                length = 10 * length + i;
+            }
+            else
+            {
+                name.append(i);
+            }
         }
 
         @Override
