@@ -8,8 +8,14 @@ public class DemanglerTest
     @Test
     public void testNestName()
     {
-        assertThat(demangle("_Z6String"), is(equalTo("String")));
-        assertThat(demangle("_Z22java.lang.StringLatin1"), is(equalTo("java.lang.StringLatin1")));
+        assertThat(
+            demangle("_Z6String")
+            , equalTo("String")
+        );
+        assertThat(
+            demangle("_Z22java.lang.StringLatin1")
+            , equalTo("java.lang.StringLatin1")
+        );
     }
 
     @Test
