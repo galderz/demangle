@@ -40,6 +40,15 @@ public class DemanglerTest
     }
 
     @Test
+    public void testIncompleteNestName()
+    {
+        assertThat(
+            demangle("_Z6Str")
+            , equalTo("_Z6Str")
+        );
+    }
+
+    @Test
     public void testInvalidMagic()
     {
         assertThat(demangle(""), equalTo(""));

@@ -38,7 +38,6 @@ class demangle implements Callable<Integer>
     {
         final StringBuilder output = new StringBuilder();
         final StringBuilder mangled = new StringBuilder();
-        final StringBuilder unknown = new StringBuilder();
         MangledSymbol symbol;
 
         String demangle(String input)
@@ -47,44 +46,52 @@ class demangle implements Callable<Integer>
             {
                 final char c = input.charAt(i);
 
+                if ("_Z".contentEquals(mangled))
+                {
+                    symbol = new MangledName();
+                }
+
+                if ("_ZN".contentEquals(mangled))
+                {
+                    symbol = new MangledNamespace();
+                }
+
+                mangled.append(c);
+
                 if (Character.isDigit(c))
                 {
-                    if ("_Z".contentEquals(unknown))
-                    {
-                        symbol = new MangledName();
-                        unknown.setLength(0);
-                    }
-
-                    if ("_ZN".contentEquals(unknown))
-                    {
-                        symbol = new MangledNamespace();
-                        unknown.setLength(0);
-                    }
-
                     symbol.addDigit(c - '0');
                     continue;
                 }
 
-                if (symbol != null && symbol.addChar(c))
+                if (symbol != null)
                 {
-                    continue;
+                    symbol.addChar(c);
                 }
-
-                unknown.append(c);
             }
 
-            if (!mangled.isEmpty())
+            if (symbol != null && symbol.isComplete())
+            {
+                output.append(symbol.demangle());
+                mangled.setLength(0);
+            }
+            else if (!mangled.isEmpty())
             {
                 output.append(mangled);
             }
-            else if (symbol != null && symbol.isComplete())
-            {
-                output.append(symbol.demangle());
-            }
-            else
-            {
-                output.append(unknown);
-            }
+
+//            if (!mangled.isEmpty())
+//            {
+//                output.append(mangled);
+//            }
+//            else if (symbol != null && symbol.isComplete())
+//            {
+//                output.append(symbol.demangle());
+//            }
+//            else
+//            {
+//                output.append(unknown);
+//            }
 
             return output.toString();
         }
@@ -101,7 +108,7 @@ class demangle implements Callable<Integer>
             return !isComplete();
         }
 
-        boolean addChar(char c);
+        void addChar(char c);
 
         void addDigit(int digit);
 
@@ -120,14 +127,16 @@ class demangle implements Callable<Integer>
         }
 
         @Override
-        public boolean addChar(char c)
+        public void addChar(char c)
         {
             if (prefix.notComplete())
             {
-                return prefix.addChar(c);
+                prefix.addChar(c);
             }
-
-            return name.addChar(c);
+            else
+            {
+                name.addChar(c);
+            }
         }
 
         @Override
@@ -165,7 +174,7 @@ class demangle implements Callable<Integer>
         }
 
         @Override
-        public boolean addChar(char c)
+        public void addChar(char c)
         {
             if (length > 0)
             {
@@ -175,10 +184,7 @@ class demangle implements Callable<Integer>
                 }
 
                 name.append(c);
-                return true;
             }
-
-            return false;
         }
 
         @Override
