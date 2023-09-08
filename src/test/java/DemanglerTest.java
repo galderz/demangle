@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.*;
 public class DemanglerTest
 {
     @Test
-    @Disabled
     public void testNamespace()
     {
         assertThat(
@@ -17,7 +16,6 @@ public class DemanglerTest
     }
 
     @Test
-    @Disabled
     public void testIncompleteNamespace()
     {
         assertThat(

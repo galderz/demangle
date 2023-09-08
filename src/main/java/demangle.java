@@ -80,19 +80,6 @@ class demangle implements Callable<Integer>
                 output.append(mangled);
             }
 
-//            if (!mangled.isEmpty())
-//            {
-//                output.append(mangled);
-//            }
-//            else if (symbol != null && symbol.isComplete())
-//            {
-//                output.append(symbol.demangle());
-//            }
-//            else
-//            {
-//                output.append(unknown);
-//            }
-
             return output.toString();
         }
     }
@@ -119,11 +106,12 @@ class demangle implements Callable<Integer>
     {
         final MangledName prefix = new MangledName();
         final MangledName name = new MangledName();
+        boolean isComplete;
 
         @Override
         public boolean isComplete()
         {
-            return prefix.isComplete() && name.isComplete();
+            return isComplete;
         }
 
         @Override
@@ -133,9 +121,13 @@ class demangle implements Callable<Integer>
             {
                 prefix.addChar(c);
             }
-            else
+            else if (name.notComplete())
             {
                 name.addChar(c);
+            }
+            else if ('E' == c)
+            {
+                isComplete = true;
             }
         }
 
