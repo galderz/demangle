@@ -29,6 +29,7 @@ public class DemanglerTest
 
     private static String demangle(String input)
     {
-        return new demangle.Demangler().demangle(input);
+        return new demangle.Demangler()
+            .demangle(input);
     }
 }

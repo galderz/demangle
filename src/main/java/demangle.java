@@ -5,8 +5,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(
@@ -99,7 +97,7 @@ class demangle implements Callable<Integer>
 
     private static final class MangledName implements MangledSymbol
     {
-        final StringBuilder name = new StringBuilder();
+        StringBuilder name;
         int length;
 
         @Override
@@ -113,6 +111,11 @@ class demangle implements Callable<Integer>
         {
             if (length > 0)
             {
+                if (name == null)
+                {
+                    name = new StringBuilder(length);
+                }
+
                 name.append(c);
                 return true;
             }
@@ -123,13 +126,13 @@ class demangle implements Callable<Integer>
         @Override
         public void addDigit(int i)
         {
-            if (name.isEmpty())
+            if (name != null && (name.capacity() - name.length()) > 0)
             {
-                length = 10 * length + i;
+                name.append(i);
             }
             else
             {
-                name.append(i);
+                length = 10 * length + i;
             }
         }
 
