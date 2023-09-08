@@ -55,6 +55,12 @@ class demangle implements Callable<Integer>
                         unknown.setLength(0);
                     }
 
+                    if ("_ZN".contentEquals(unknown))
+                    {
+                        symbol = new MangledNamespace();
+                        unknown.setLength(0);
+                    }
+
                     symbol.addDigit(c - '0');
                     continue;
                 }
@@ -84,15 +90,67 @@ class demangle implements Callable<Integer>
         }
     }
 
-    private sealed interface MangledSymbol permits MangledName
+    private sealed interface MangledSymbol permits
+        MangledName
+        , MangledNamespace
     {
         boolean isComplete();
+
+        default boolean notComplete()
+        {
+            return !isComplete();
+        }
 
         boolean addChar(char c);
 
         void addDigit(int digit);
 
         String demangle();
+    }
+
+    private static final class MangledNamespace implements MangledSymbol
+    {
+        final MangledName prefix = new MangledName();
+        final MangledName name = new MangledName();
+
+        @Override
+        public boolean isComplete()
+        {
+            return prefix.isComplete() && name.isComplete();
+        }
+
+        @Override
+        public boolean addChar(char c)
+        {
+            if (prefix.notComplete())
+            {
+                return prefix.addChar(c);
+            }
+
+            return name.addChar(c);
+        }
+
+        @Override
+        public void addDigit(int digit)
+        {
+            if (prefix.notComplete())
+            {
+                prefix.addDigit(digit);
+            }
+            else
+            {
+                name.addDigit(digit);
+            }
+        }
+
+        @Override
+        public String demangle()
+        {
+            return String.format("%s::%s"
+                , prefix.demangle()
+                , name.demangle()
+            );
+        }
     }
 
     private static final class MangledName implements MangledSymbol
@@ -103,7 +161,7 @@ class demangle implements Callable<Integer>
         @Override
         public boolean isComplete()
         {
-            return name.length() == length;
+            return name != null && name.length() == length;
         }
 
         @Override
