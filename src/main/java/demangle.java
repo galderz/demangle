@@ -151,6 +151,11 @@ class demangle implements Callable<Integer>
         @Override
         public String demangle()
         {
+            if (symbol instanceof MangledName)
+            {
+                return String.format("%s*", symbol.demangle());
+            }
+
             return symbol.demangle();
         }
     }
@@ -267,7 +272,14 @@ class demangle implements Callable<Integer>
         @Override
         public void addDigit(int digit)
         {
-            throw new RuntimeException("NYI");
+            if (returnParam.notComplete())
+            {
+                returnParam.addDigit(digit);
+            }
+            else
+            {
+                currentParam.addDigit(digit);
+            }
         }
 
         @Override

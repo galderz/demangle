@@ -9,6 +9,17 @@ public class DemanglerTest
     // todo test `b` primitive
     // todo test `t` primitive
 
+    // todo test 2 non primitive parameters
+
+    @Test
+    public void testJavaMethodStringVoid()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJP16java.lang.Stringv")
+            , equalTo("java.lang.String* java.lang.StringLatin1::newString()")
+        );
+    }
+
     @Test
     public void testJavaMethodDoubleDouble()
     {
