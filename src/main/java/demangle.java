@@ -8,6 +8,7 @@ import picocli.CommandLine.Parameters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Command(
     name = "demangler"
@@ -211,9 +212,9 @@ class demangle implements Callable<Integer>
     private static final class MangledJavaMethod implements MangledSymbol
     {
         final MangledNamespace namespace;
-        // todo support multiple parameters
+        final List<MangledParameter> parameters = new ArrayList<>();
         final MangledParameter returnParam = new MangledParameter();
-        final MangledParameter currentParam = new MangledParameter();
+        MangledParameter currentParam = new MangledParameter();
         boolean initialized;
 
         private MangledJavaMethod(MangledNamespace namespace)
@@ -224,7 +225,13 @@ class demangle implements Callable<Integer>
         @Override
         public boolean isComplete()
         {
-            return returnParam.isComplete() && currentParam.isComplete();
+            if (currentParam.isComplete())
+            {
+                appendParameter();
+                return returnParam.isComplete();
+            }
+
+            return false;
         }
 
         @Override
@@ -240,78 +247,44 @@ class demangle implements Callable<Integer>
             {
                 returnParam.addChar(c);
             }
-            else
+            else if (currentParam.notComplete())
             {
                 currentParam.addChar(c);
             }
+            else
+            {
+                appendParameter();
+                currentParam.addChar(c);
+            }
+        }
+
+        private void appendParameter()
+        {
+            parameters.add(currentParam);
+            currentParam = new MangledParameter();
         }
 
         @Override
         public void addDigit(int digit)
         {
-            // TODO: Customise this generated block
+            throw new RuntimeException("NYI");
         }
 
         @Override
         public String demangle()
         {
-            final String currentParamDemangled = currentParam.demangle();
             return String.format(
                 "%s %s(%s)"
                 , returnParam.demangle()
                 , namespace.demangle()
-                , "void".equals(currentParamDemangled) ? "" : currentParamDemangled
+                , parameters.size() == 1 && "void".equals(parameters.get(0).demangle())
+                    ? ""
+                    : parameters.stream()
+                        .map(MangledParameter::demangle)
+                        .collect(Collectors.joining(", "))
             );
         }
     }
-
-//    private static final class MangledParameter implements MangledSymbol
-//    {
-//        boolean isComplete;
-//
-//        @Override
-//        public boolean isComplete()
-//        {
-//            return false;  // TODO: Customise this generated block
-//        }
-//
-//        @Override
-//        public void addChar(char c)
-//        {
-//            switch (c)
-//            {
-//                case 'a' -> complete("signed char"); // todo can we demangle to byte?
-//                case 'b' -> complete("bool");
-//                case 'd' -> complete("double");
-//                case 'f' -> complete("float");
-//                case 'i' -> complete("int");
-//                case 'l' -> complete("long");
-//                case 's' -> complete("short");
-//                case 't' -> complete("unsigned short"); // todo can we demangle to char?
-//                case 'v' -> complete("void");
-//                case 'P' ->
-//            }
-//            // TODO: Customise this generated block
-//        }
-//
-//        private void complete(String demangled)
-//        {
-//            name.append(demangled);
-//            isComplete = true;
-//        }
-//
-//        @Override
-//        public void addDigit(int digit)
-//        {
-//            // TODO: Customise this generated block
-//        }
-//
-//        @Override
-//        public String demangle()
-//        {
-//            return null;  // TODO: Customise this generated block
-//        }
-//    }
 
     private static final class MangledNamespace implements MangledSymbol
     {

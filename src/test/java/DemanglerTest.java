@@ -37,6 +37,15 @@ public class DemanglerTest
     }
 
     @Test
+    public void testJavaMethodIntIntInt()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJiii")
+            , equalTo("int java.lang.StringLatin1::newString(int, int)")
+        );
+    }
+
+    @Test
     public void testJavaMethodLongLong()
     {
         assertThat(
