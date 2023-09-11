@@ -1,11 +1,68 @@
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 
 public class DemanglerTest
 {
+    // todo test `a` primitive
+    // todo test `b` primitive
+    // todo test `t` primitive
+
+    @Test
+    public void testJavaMethodDoubleDouble()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJdd")
+            , equalTo("double java.lang.StringLatin1::newString(double)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodFloatFloat()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJff")
+            , equalTo("float java.lang.StringLatin1::newString(float)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodIntInt()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJii")
+            , equalTo("int java.lang.StringLatin1::newString(int)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodLongLong()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJll")
+            , equalTo("long java.lang.StringLatin1::newString(long)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodShortShort()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJss")
+            , equalTo("short java.lang.StringLatin1::newString(short)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodVoidVoid()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJvv")
+            , equalTo("void java.lang.StringLatin1::newString()")
+        );
+    }
+
     @Test
     public void testNamespace()
     {

@@ -5,6 +5,8 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(
@@ -56,6 +58,11 @@ class demangle implements Callable<Integer>
                     symbol = new MangledNamespace();
                 }
 
+                if (symbol instanceof MangledNamespace mn && symbol.isComplete() && 'J' == c)
+                {
+                    symbol = new MangledJavaMethod(mn);
+                }
+
                 mangled.append(c);
 
                 if (Character.isDigit(c))
@@ -87,6 +94,9 @@ class demangle implements Callable<Integer>
     private sealed interface MangledSymbol permits
         MangledName
         , MangledNamespace
+        , MangledParameter
+        , MangledPrimitive
+        , MangledJavaMethod
     {
         boolean isComplete();
 
@@ -101,6 +111,207 @@ class demangle implements Callable<Integer>
 
         String demangle();
     }
+
+    private static final class MangledParameter implements MangledSymbol
+    {
+        MangledSymbol symbol;
+
+        @Override
+        public boolean isComplete()
+        {
+            return symbol != null && symbol.isComplete();
+        }
+
+        @Override
+        public void addChar(char c)
+        {
+            if (symbol == null)
+            {
+                if ('P' == c)
+                {
+                    symbol = new MangledName();
+                    return; // Don't add the marker to the name
+                }
+                else
+                {
+                    symbol = new MangledPrimitive();
+                }
+            }
+
+            symbol.addChar(c);
+        }
+
+        @Override
+        public void addDigit(int digit)
+        {
+            symbol.addDigit(digit);
+        }
+
+        @Override
+        public String demangle()
+        {
+            return symbol.demangle();
+        }
+    }
+
+    private static final class MangledPrimitive implements MangledSymbol
+    {
+        String demangled;
+
+        @Override
+        public boolean isComplete()
+        {
+            return demangled != null;
+        }
+
+        @Override
+        public void addChar(char c)
+        {
+            switch (c)
+            {
+                case 'a' ->
+                    demangled = "signed char"; // todo can we demangle to byte?
+                case 'b' ->
+                    demangled = "bool"; // todo can me demangle to boolean?
+                case 'd' ->
+                    demangled = "double";
+                case 'f' ->
+                    demangled = "float";
+                case 'i' ->
+                    demangled = "int";
+                case 'l' ->
+                    demangled = "long";
+                case 's' ->
+                    demangled = "short";
+                case 't' ->
+                    demangled = "unsigned short"; // todo can we demangle to char?
+                case 'v' ->
+                    demangled = "void";
+                default ->
+                    throw new IllegalArgumentException(String.format(
+                        "Illegal argument for primitive parameter: %c"
+                        , c
+                    ));
+            }
+        }
+
+        @Override
+        public void addDigit(int digit)
+        {
+            throw new IllegalStateException("A digit should not be added to a primitive");
+        }
+
+        @Override
+        public String demangle()
+        {
+            return demangled;
+        }
+    }
+
+    private static final class MangledJavaMethod implements MangledSymbol
+    {
+        final MangledNamespace namespace;
+        // todo support multiple parameters
+        final MangledParameter returnParam = new MangledParameter();
+        final MangledParameter currentParam = new MangledParameter();
+        boolean initialized;
+
+        private MangledJavaMethod(MangledNamespace namespace)
+        {
+            this.namespace = namespace;
+        }
+
+        @Override
+        public boolean isComplete()
+        {
+            return returnParam.isComplete() && currentParam.isComplete();
+        }
+
+        @Override
+        public void addChar(char c)
+        {
+            if ('J' == c && !initialized)
+            {
+                initialized = true;
+                return;
+            }
+
+            if (returnParam.notComplete())
+            {
+                returnParam.addChar(c);
+            }
+            else
+            {
+                currentParam.addChar(c);
+            }
+        }
+
+        @Override
+        public void addDigit(int digit)
+        {
+            // TODO: Customise this generated block
+        }
+
+        @Override
+        public String demangle()
+        {
+            final String currentParamDemangled = currentParam.demangle();
+            return String.format(
+                "%s %s(%s)"
+                , returnParam.demangle()
+                , namespace.demangle()
+                , "void".equals(currentParamDemangled) ? "" : currentParamDemangled
+            );
+        }
+    }
+
+//    private static final class MangledParameter implements MangledSymbol
+//    {
+//        boolean isComplete;
+//
+//        @Override
+//        public boolean isComplete()
+//        {
+//            return false;  // TODO: Customise this generated block
+//        }
+//
+//        @Override
+//        public void addChar(char c)
+//        {
+//            switch (c)
+//            {
+//                case 'a' -> complete("signed char"); // todo can we demangle to byte?
+//                case 'b' -> complete("bool");
+//                case 'd' -> complete("double");
+//                case 'f' -> complete("float");
+//                case 'i' -> complete("int");
+//                case 'l' -> complete("long");
+//                case 's' -> complete("short");
+//                case 't' -> complete("unsigned short"); // todo can we demangle to char?
+//                case 'v' -> complete("void");
+//                case 'P' ->
+//            }
+//            // TODO: Customise this generated block
+//        }
+//
+//        private void complete(String demangled)
+//        {
+//            name.append(demangled);
+//            isComplete = true;
+//        }
+//
+//        @Override
+//        public void addDigit(int digit)
+//        {
+//            // TODO: Customise this generated block
+//        }
+//
+//        @Override
+//        public String demangle()
+//        {
+//            return null;  // TODO: Customise this generated block
+//        }
+//    }
 
     private static final class MangledNamespace implements MangledSymbol
     {
