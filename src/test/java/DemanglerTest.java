@@ -9,7 +9,23 @@ public class DemanglerTest
     // todo test `b` primitive
     // todo test `t` primitive
 
-    // todo test 2 non primitive parameters
+    @Test
+    public void testJavaMethodComplex()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin115regionMatchesCIEJbP6byte[]iP6byte[]ii")
+            , equalTo("bool java.lang.StringLatin1::regionMatchesCI(byte[]*, int, byte[]*, int, int)")
+        );
+    }
+
+    @Test
+    public void testJavaMethodStringByteArray()
+    {
+        assertThat(
+            demangle("_ZN22java.lang.StringLatin19newStringEJP16java.lang.StringP6byte[]")
+            , equalTo("java.lang.String* java.lang.StringLatin1::newString(byte[]*)")
+        );
+    }
 
     @Test
     public void testJavaMethodStringVoid()
