@@ -18,8 +18,9 @@ import java.util.stream.Collectors;
 class demangle implements Callable<Integer>
 {
     @Parameters(
-        index = "0"
+        arity = "0"
         , description = "Text input to demangle"
+        , index = "0"
     )
     private String input;
 
@@ -33,18 +34,28 @@ class demangle implements Callable<Integer>
     public Integer call()
     {
         final Demangler demangler = new Demangler();
-        System.out.println(demangler.demangle(input));
+        if (input != null)
+        {
+            System.out.println(demangler.demangle(input));
+            return 0;
+        }
+
+        String line;
+        while ((line = System.console().readLine()) != null)
+        {
+            System.out.println(demangler.demangle(line));
+        }
         return 0;
     }
 
     static final class Demangler
     {
-        final StringBuilder output = new StringBuilder();
-        final StringBuilder mangled = new StringBuilder();
-        MangledSymbol symbol;
-
         String demangle(String input)
         {
+            StringBuilder output = new StringBuilder();
+            StringBuilder mangled = new StringBuilder();
+            MangledSymbol symbol = null;
+
             for (int i = 0; i < input.length(); i++)
             {
                 final char c = input.charAt(i);
