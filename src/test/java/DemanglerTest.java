@@ -5,10 +5,10 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class DemanglerTest
 {
-    // todo test `a` primitive
-    // todo test `b` primitive
-    // todo test `t` primitive
-
+//    // todo test `a` primitive
+//    // todo test `b` primitive
+//    // todo test `t` primitive
+//
     @Test
     public void testJavaMethodComplex()
     {

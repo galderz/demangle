@@ -1,6 +1,8 @@
 package model;
 
-public sealed interface Parameter permits
-    Type
-    , Primitive
+public sealed interface Parameter
+    extends Symbol
+    permits
+        Type
+        , Primitive
 {}
