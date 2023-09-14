@@ -1,5 +1,6 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //DEPS info.picocli:picocli:4.6.3
+//SOURCES model/*.java
 
 import model.JavaMethodBuilder;
 import model.NameBuilder;
